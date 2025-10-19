@@ -7,6 +7,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface StatsRepository extends JpaRepository<Hit, Long> {
-    List<Hit> findByUriInAndTimeHitBetween(
+    List<Hit> findAllByTimeHitBetween(ZonedDateTime start, ZonedDateTime end);
+
+    List<Hit> findAllByUriInAndTimeHitBetween(
             List<String> uris, ZonedDateTime start, ZonedDateTime end);
 }

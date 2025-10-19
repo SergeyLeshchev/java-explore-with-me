@@ -6,8 +6,7 @@ import ru.practicum.ewm.StatsResponseDto;
 import ru.practicum.ewm.model.Hit;
 import ru.practicum.ewm.repository.StatsRepository;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +22,13 @@ public class StatsServiceImpl implements StatsService {
         return statsRepository.save(hit);
     }
 
-    public List<StatsResponseDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        List<Hit> hits = statsRepository.findByUriInAndTimeHitBetween(
-                uris, start.atZone(ZoneOffset.UTC), end.atZone(ZoneOffset.UTC));
+    public List<StatsResponseDto> getStats(ZonedDateTime start, ZonedDateTime end, List<String> uris, boolean unique) {
+        List<Hit> hits;
+        if (uris == null || uris.isEmpty()) {
+            hits = statsRepository.findAllByTimeHitBetween(start, end);
+        } else {
+            hits = statsRepository.findAllByUriInAndTimeHitBetween(uris, start, end);
+        }
 
         // Получаем список hits для каждого uri
         Map<String, List<Hit>> hitsForEachUri;

@@ -12,6 +12,7 @@ import ru.practicum.ewm.model.Hit;
 import ru.practicum.ewm.service.StatsService;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @RestController
@@ -33,6 +34,11 @@ public class StatsController {
                                            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                            @RequestParam(required = false) List<String> uris,
                                            @RequestParam(defaultValue = "false") boolean unique) {
-        return statsService.getStats(start, end, uris, unique);
+        return statsService.getStats(start.atZone(ZoneOffset.UTC), end.atZone(ZoneOffset.UTC), uris, unique);
+    }
+
+    @GetMapping("/check")
+    public String check() {
+        return "Это улучшенная версия контейнеров 8";
     }
 }
