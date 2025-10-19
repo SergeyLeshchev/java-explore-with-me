@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.HitRequestDto;
 import ru.practicum.ewm.HitResponseDto;
@@ -20,6 +21,7 @@ public class StatsController {
     private final StatsService statsService;
 
     @PostMapping(path = "/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public HitResponseDto createHit(@RequestBody HitRequestDto newHitDto) {
         Hit newHit = statsService.createHit(HitMapper.mapToHit(newHitDto));
         HitResponseDto hitResponseDto = HitMapper.mapToHitResponseDto(newHit);

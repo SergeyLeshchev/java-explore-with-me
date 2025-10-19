@@ -13,5 +13,5 @@ public class HitRequestDto {
     private String app;
     private String uri;
     private String ip;
-    private ZonedDateTime timestamp;
+    private String timestamp;
 }

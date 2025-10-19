@@ -4,6 +4,8 @@ import ru.practicum.ewm.HitRequestDto;
 import ru.practicum.ewm.HitResponseDto;
 import ru.practicum.ewm.model.Hit;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public class HitMapper {
@@ -18,12 +20,14 @@ public class HitMapper {
     }
 
     public static Hit mapToHit(HitRequestDto hitRequestDto) {
+        LocalDateTime localDateTime = LocalDateTime.parse(hitRequestDto.getTimestamp(),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         return new Hit(
                 null,
                 hitRequestDto.getApp(),
                 hitRequestDto.getUri(),
                 hitRequestDto.getIp(),
-                hitRequestDto.getTimestamp()
+                localDateTime.atZone(ZoneOffset.UTC)
         );
     }
 }
