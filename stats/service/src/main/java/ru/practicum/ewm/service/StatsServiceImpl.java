@@ -62,6 +62,8 @@ public class StatsServiceImpl implements StatsService {
             );
         }
 
-        return statsList;
+        return statsList.stream()
+                .sorted((a, b) -> Integer.compare(b.getHits(), a.getHits()))
+                .collect(Collectors.toList());
     }
 }

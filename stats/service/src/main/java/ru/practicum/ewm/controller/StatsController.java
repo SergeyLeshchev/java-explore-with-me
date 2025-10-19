@@ -36,9 +36,4 @@ public class StatsController {
                                            @RequestParam(defaultValue = "false") boolean unique) {
         return statsService.getStats(start.atZone(ZoneOffset.UTC), end.atZone(ZoneOffset.UTC), uris, unique);
     }
-
-    @GetMapping("/check")
-    public String check() {
-        return "Это улучшенная версия контейнеров 8";
-    }
 }
