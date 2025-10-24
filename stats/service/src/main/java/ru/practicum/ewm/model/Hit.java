@@ -18,10 +18,10 @@ public class Hit {
     private Integer id;
     @Column(nullable = false)
     private String app;
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1024)
     private String uri;
-    @Column(nullable = false)
+    @Column(nullable = false, length = 64)
     private String ip;
-    @Column(nullable = false)
+    @Column(name = "time_hit", nullable = false)
     private ZonedDateTime timeHit;
 }

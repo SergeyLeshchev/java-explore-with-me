@@ -1,13 +1,14 @@
 package ru.practicum.ewm.service;
 
-import ru.practicum.ewm.StatsResponseDto;
+import ru.practicum.ewm.HitRequestDto;
+import ru.practicum.ewm.ViewStatsDto;
 import ru.practicum.ewm.model.Hit;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface StatsService {
-    Hit createHit(Hit hit);
+    Hit createHit(HitRequestDto newHitDto);
 
-    List<StatsResponseDto> getStats(ZonedDateTime start, ZonedDateTime end, List<String> uris, boolean unique);
+    List<ViewStatsDto> getStats(ZonedDateTime start, ZonedDateTime end, List<String> uris, boolean unique);
 }
