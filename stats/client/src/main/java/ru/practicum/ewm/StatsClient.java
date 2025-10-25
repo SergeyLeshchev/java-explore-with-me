@@ -2,6 +2,7 @@ package ru.practicum.ewm;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StatsClient {
     private final RestTemplate rest;
+    @Value("${app.name}")
+    private String app;
 
-    public void createHit(HttpServletRequest request, String app) {
+    public void createHit(HttpServletRequest request) {
         HitRequestDto newHitDto = new HitRequestDto(
                 app,
                 request.getRequestURI(),
-                request.getLocalAddr(),
+                request.getRemoteAddr(),
                 null
         );
         makeAndSendRequest(HttpMethod.POST, "/hit", null, newHitDto);
