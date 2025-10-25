@@ -1,14 +1,74 @@
 services:
   stats-server:
+    build:
+      context: .
+      dockerfile: stats/Dockerfile.txt
+    image: stats-server
+    container_name: stats-server
     ports:
       - "9090:9090"
+    depends_on:
+      - stats-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/statsdb
+      - SPRING_DATASOURCE_USERNAME=dbuser
+      - SPRING_DATASOURCE_PASSWORD=12345
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    volumes:
+      - .:/app:rw
 
   stats-db:
     image: postgres:16.1
+    container_name: stats-db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_USER=dbuser
+      - POSTGRES_DB=statsdb
+    volumes:
+      - postgres-data-stats:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbuser -d statsdb"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
 
   ewm-service:
+    build:
+      context: .
+      dockerfile: ewm/Dockerfile.txt
+    image: ewm-server
+    container_name: ewm-server
     ports:
       - "8080:8080"
+    depends_on:
+      - ewm-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewmdb
+      - SPRING_DATASOURCE_USERNAME=dbuser
+      - SPRING_DATASOURCE_PASSWORD=12345
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+    volumes:
+      - .:/app:rw
 
   ewm-db:
     image: postgres:16.1
+    container_name: ewm-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_USER=dbuser
+      - POSTGRES_DB=ewmdb
+    volumes:
+      - postgres-data-ewm:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbuser -d ewmdb"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+volumes:
+  postgres-data-stats:
+  postgres-data-ewm:
