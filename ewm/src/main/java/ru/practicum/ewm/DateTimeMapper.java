@@ -5,7 +5,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 public class DateTimeMapper {
-    private final static java.time.format.DateTimeFormatter FORMATTER =
+    private static final java.time.format.DateTimeFormatter FORMATTER =
             java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static String mapToString(ZonedDateTime time) {

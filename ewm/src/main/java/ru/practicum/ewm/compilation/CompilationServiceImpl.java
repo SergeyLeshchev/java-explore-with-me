@@ -34,11 +34,11 @@ public class CompilationServiceImpl implements CompilationService {
                 .distinct()
                 .toList();
         List<Object[]> allEventsData = eventRepository.findAllEventShortDtoByIdIn(allEventIds);
-        List<EventShortDto> EventShortDtoList = allEventsData.stream()
+        List<EventShortDto> eventShortDtoList = allEventsData.stream()
                 .map(EventMapper::mapToEventShortDto)
                 .toList();
         Map<Long, EventShortDto> eventsMap = new HashMap<>();
-        EventShortDtoList.forEach(e -> eventsMap.put(e.getId(), e));
+        eventShortDtoList.forEach(e -> eventsMap.put(e.getId(), e));
 
         Map<Long, CompilationDto> compilationsDtoMap = new HashMap<>();
         compilations.forEach(c -> compilationsDtoMap.put(c.getId(), CompilationMapper.mapToCompilationDto(c)));
