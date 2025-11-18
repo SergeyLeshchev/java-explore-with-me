@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.HitRequestDto;
 import ru.practicum.ewm.ViewStatsDto;
+import ru.practicum.ewm.exception.BadRequestException;
 import ru.practicum.ewm.model.Hit;
 import ru.practicum.ewm.model.StatsProjection;
 import ru.practicum.ewm.repository.StatsRepository;
@@ -28,6 +29,11 @@ public class StatsServiceImpl implements StatsService {
     }
 
     public List<ViewStatsDto> getStats(ZonedDateTime start, ZonedDateTime end, List<String> uris, boolean unique) {
+        if (start != null && end != null) {
+            if (end.isBefore(start)) {
+                throw new BadRequestException("Начало периода не может быть после окончания периода");
+            }
+        }
         List<StatsProjection> statsProjections;
         if (uris == null || uris.isEmpty()) {
             if (unique) {
@@ -47,7 +53,7 @@ public class StatsServiceImpl implements StatsService {
                 .map(sp -> new ViewStatsDto(
                         sp.getApp(),
                         sp.getUri(),
-                        sp.getHits().intValue()
+                        sp.getHits()
                 ))
                 .sorted((a, b) -> Integer.compare(b.getHits(), a.getHits()))
                 .toList();
