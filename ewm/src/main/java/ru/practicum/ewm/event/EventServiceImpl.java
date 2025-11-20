@@ -261,13 +261,22 @@ public class EventServiceImpl implements EventService {
         Map<String, Integer> statsMap = new HashMap<>();
         stats.forEach(v -> statsMap.put(v.getUri(), v.getHits()));
 
+        eventShortDtos.forEach(e -> e.setViews(statsMap.get("/event/" + e.getId())));
         statsClient.createHit(params.getRequest());
+        // Такой синтаксис сортировки, потому что Checkstyle не пропускает оператор switch рядом со скобкой
         return eventShortDtos.stream()
-                .peek(e -> e.setViews(statsMap.get("/event/" + e.getId())))
-                .sorted( switch (params.getSort()) {
-                    case EVENT_DATE -> Comparator.comparing(EventShortDto::getEventDate).reversed();
-                    case VIEWS -> Comparator.comparing(EventShortDto::getViews).reversed();
-                    default -> Comparator.comparing(EventShortDto::getId);
+                .sorted((e1, e2) -> {
+                    switch (params.getSort()) {
+                        case EVENT_DATE -> {
+                            return e2.getEventDate().compareTo(e1.getEventDate());
+                        }
+                        case VIEWS -> {
+                            return Integer.compare(e2.getViews(), e1.getViews());
+                        }
+                        default -> {
+                            return Long.compare(e1.getId(), e2.getId());
+                        }
+                    }
                 })
                 .toList();
     }
