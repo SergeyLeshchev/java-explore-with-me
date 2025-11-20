@@ -264,7 +264,7 @@ public class EventServiceImpl implements EventService {
         statsClient.createHit(params.getRequest());
         return eventShortDtos.stream()
                 .peek(e -> e.setViews(statsMap.get("/event/" + e.getId())))
-                .sorted(switch (params.getSort()) {
+                .sorted( switch (params.getSort()) {
                     case EVENT_DATE -> Comparator.comparing(EventShortDto::getEventDate).reversed();
                     case VIEWS -> Comparator.comparing(EventShortDto::getViews).reversed();
                     default -> Comparator.comparing(EventShortDto::getId);
