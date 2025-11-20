@@ -1,5 +1,6 @@
 package ru.practicum.ewm.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -70,6 +71,17 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleConflictException(ConflictException e) {
+        return new ErrorResponse(
+                HttpStatus.CONFLICT.name(),
+                "Integrity constraint has been violated.",
+                e.getMessage(),
+                DateTimeMapper.mapToString(ZonedDateTime.now())
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleDataIntegrityViolation(DataIntegrityViolationException e) {
         return new ErrorResponse(
                 HttpStatus.CONFLICT.name(),
                 "Integrity constraint has been violated.",

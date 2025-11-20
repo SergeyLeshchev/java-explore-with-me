@@ -29,21 +29,18 @@ public class CategoryController {
     }
 
     @PatchMapping("/admin/categories/{catId}")
-    @ResponseStatus(HttpStatus.OK)
     public CategoryDto updateCategory(@RequestBody @Valid UpdateCategoryDto newCategoryDto,
                                       @PathVariable Long catId) {
         return categoryService.updateCategory(newCategoryDto, catId);
     }
 
     @GetMapping("/categories")
-    @ResponseStatus(HttpStatus.OK)
     public List<CategoryDto> getCategories(@RequestParam(required = false, defaultValue = "0") Integer from,
                                            @RequestParam(required = false, defaultValue = "10") Integer size) {
         return categoryService.getCategories(from, size);
     }
 
     @GetMapping("/categories/{catId}")
-    @ResponseStatus(HttpStatus.OK)
     public CategoryDto getCategory(@PathVariable Long catId) {
         return categoryService.getCategory(catId);
     }

@@ -1,6 +1,7 @@
 package ru.practicum.ewm.category;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
@@ -49,17 +50,13 @@ public class CategoryServiceImpl implements CategoryService {
         if (category.getName().equals(newCategoryDto.getName())) {
             return CategoryMapper.mapToCategoryDto(category);
         }
-        Category category1 = categoryRepository.findByName(newCategoryDto.getName());
-        if (category1 != null && !category1.getId().equals(catId)) {
-            throw new UniqueConstraintException("Категория с именем " + newCategoryDto.getName() + " уже существует");
-        }
         category.setName(newCategoryDto.getName());
         return CategoryMapper.mapToCategoryDto(categoryRepository.save(category));
     }
 
     @Override
     public List<CategoryDto> getCategories(Integer from, Integer size) {
-        return categoryRepository.findAllFromAndSize(from, size).stream()
+        return categoryRepository.findAll(PageRequest.of(from, size)).stream()
                 .map(CategoryMapper::mapToCategoryDto)
                 .toList();
     }

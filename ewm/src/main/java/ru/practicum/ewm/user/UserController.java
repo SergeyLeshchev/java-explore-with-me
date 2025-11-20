@@ -17,7 +17,6 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/users/{userId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getUserRequests(@PathVariable Long userId) {
         return userService.getUserRequests(userId);
     }
@@ -29,13 +28,11 @@ public class UserController {
     }
 
     @PatchMapping("/users/{userId}/requests/{requestId}/cancel")
-    @ResponseStatus(HttpStatus.OK)
     public ParticipationRequestDto cancelRequest(@PathVariable Long userId, @PathVariable Long requestId) {
         return userService.cancelRequest(userId, requestId);
     }
 
     @GetMapping("/admin/users")
-    @ResponseStatus(HttpStatus.OK)
     public List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                                   @RequestParam(required = false, defaultValue = "0") Integer from,
                                   @RequestParam(required = false, defaultValue = "10") Integer size) {

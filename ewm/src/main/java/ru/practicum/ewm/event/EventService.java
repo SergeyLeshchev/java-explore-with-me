@@ -3,7 +3,6 @@ package ru.practicum.ewm.event;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.event.dto.*;
-import ru.practicum.ewm.event.model.Sort;
 import ru.practicum.ewm.user.dto.ParticipationRequestDto;
 
 import java.util.List;
@@ -22,14 +21,11 @@ public interface EventService {
 
     EventRequestStatusUpdateResult changeRequestStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest request);
 
-    List<EventFullDto> getEvents_2(List<Long> users, List<String> states, List<Long> categories,
-                                   String rangeStart, String rangeEnd, Integer from, Integer size);
+    List<EventFullDto> getEventsAdmin(ListParamsAdmin params);
 
-    EventFullDto updateEvent_1(Long eventId, UpdateEventRequest request);
+    EventFullDto updateEventAdmin(Long eventId, UpdateEventRequest request);
 
-    List<EventShortDto> getEvents_1(String text, List<Long> categories, Boolean paid, String rangeStart, String rangeEnd,
-                                    Boolean onlyAvailable, Sort sort, Integer from, Integer size,
-                                    HttpServletRequest request);
+    List<EventShortDto> getEventsPublic(ListParamsPublic params);
 
-    EventFullDto getEvent_1(Long eventId, HttpServletRequest request);
+    EventFullDto getEventPublic(Long eventId, HttpServletRequest request);
 }

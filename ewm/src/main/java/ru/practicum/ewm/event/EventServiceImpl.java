@@ -3,6 +3,9 @@ package ru.practicum.ewm.event;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.DateTimeMapper;
 import ru.practicum.ewm.StatsClient;
@@ -10,7 +13,6 @@ import ru.practicum.ewm.ViewStatsDto;
 import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.model.Sort;
 import ru.practicum.ewm.event.model.State;
 import ru.practicum.ewm.event.model.Status;
 import ru.practicum.ewm.exception.BadRequestException;
@@ -24,13 +26,9 @@ import ru.practicum.ewm.user.dto.ParticipationRequestDto;
 import ru.practicum.ewm.user.mapper.ParticipationRequestMapper;
 import ru.practicum.ewm.user.model.ParticipationRequest;
 
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -47,7 +45,8 @@ public class EventServiceImpl implements EventService {
     public List<EventShortDto> getEvents(Long userId, Integer from, Integer size) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-        List<Object[]> events = eventRepository.findAllFromAndSizeByUserId(userId, from, size);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("id"));
+        List<Event> events = eventRepository.findByInitiatorIdOrderById(userId, pageable);
         return events.stream()
                 .map(EventMapper::mapToEventShortDto)
                 .toList();
@@ -180,35 +179,24 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventFullDto> getEvents_2(List<Long> users, List<String> states, List<Long> categories,
-                                          String rangeStart, String rangeEnd, Integer from, Integer size) {
-        if (users == null) {
-            users = Collections.emptyList();
-        }
-        if (states == null) {
-            states = Collections.emptyList();
-        }
-        if (categories == null) {
-            categories = Collections.emptyList();
-        }
-        if (rangeStart == null || rangeStart.isBlank()) {
-            rangeStart = "2020-01-01 01:00:00";
-        }
-        if (rangeEnd == null || rangeEnd.isBlank()) {
-            rangeEnd = "2040-01-01 01:00:00";
-        }
+    public List<EventFullDto> getEventsAdmin(ListParamsAdmin params) {
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(),
+                params.getSize(), Sort.by("id"));
         List<Event> events = eventRepository.findAllByParametersAdmin(
-                users, states, categories,
-                DateTimeMapper.mapToZonedDateTime(rangeStart),
-                DateTimeMapper.mapToZonedDateTime(rangeEnd),
-                from, size);
+                params.getUsers(),
+                params.getStates(),
+                params.getCategories(),
+                params.getRangeStart(),
+                params.getRangeEnd(),
+                pageable
+        );
         return events.stream()
                 .map(EventMapper::mapToEventFullDto)
                 .toList();
     }
 
     @Override
-    public EventFullDto updateEvent_1(Long eventId, UpdateEventRequest request) {
+    public EventFullDto updateEventAdmin(Long eventId, UpdateEventRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id " + eventId + " не найдено"));
         if (request.hasEventDate()) {
@@ -237,52 +225,55 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> getEvents_1(String text, List<Long> categories, Boolean paid,
-                                           String rangeStart, String rangeEnd, Boolean onlyAvailable,
-                                           Sort sort, Integer from, Integer size, HttpServletRequest request) {
-        if (text == null) {
-            text = "";
+    public List<EventShortDto> getEventsPublic(ListParamsPublic params) {
+        ZonedDateTime start = DateTimeMapper.mapToZonedDateTime(params.getRangeStart());
+        ZonedDateTime end = DateTimeMapper.mapToZonedDateTime(params.getRangeEnd());
+        if (start == null) {
+            start = ZonedDateTime.now(ZoneOffset.UTC);
         }
-        if (categories == null) {
-            categories = Collections.emptyList();
+        if (end == null) {
+            end = ZonedDateTime.now(ZoneOffset.UTC).plusYears(100);
         }
+        if (end.isBefore(start)) {
+            throw new BadRequestException("Начало события не может быть позже его окончания");
+        }
+        Pageable pageable = PageRequest.of(params.getFrom() / params.getSize(),
+                params.getSize(), Sort.by("id"));
+        List<Event> events = eventRepository.findAllByParametersUser(
+                params.getText(),
+                params.getCategories(),
+                params.getPaid(),
+                start,
+                end,
+                params.getOnlyAvailable(),
+                pageable
+        );
 
-        // Проверяем на null и конвертируем в LocalDateTime
-        LocalDateTime start = null;
-        LocalDateTime end = null;
-        // Если период не задан, то ищем от настоящего момента
-        if ((rangeStart == null || rangeStart.isBlank()) &&
-                (rangeEnd == null || rangeEnd.isBlank())) {
-            start = LocalDateTime.now();
-        } else {
-            if (rangeStart != null) {
-                start = LocalDateTime.parse(rangeStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            }
-            if (rangeEnd != null) {
-                end = LocalDateTime.parse(rangeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            }
-        }
-        if (start != null && end != null) {
-            if (end.isBefore(start)) {
-                throw new BadRequestException("Начало событие не может быть позже его окончания");
-            }
-        }
-        String sortString = "";
-        if (sort != null) {
-            sortString = sort.toString();
-        }
-
-        List<Object[]> events = eventRepository.findAllByParametersUser(text, categories, paid,
-                start, end, onlyAvailable, sortString, from, size);
-
-        statsClient.createHit(request);
-        return events.stream()
+        List<EventShortDto> eventShortDtos = events.stream()
                 .map(EventMapper::mapToEventShortDto)
+                .toList();
+        List<ViewStatsDto> stats = statsClient.getStats(
+                DateTimeMapper.mapToString(ZonedDateTime.now(ZoneOffset.UTC).minusYears(5)),
+                DateTimeMapper.mapToString(ZonedDateTime.now(ZoneOffset.UTC)),
+                eventShortDtos.stream().map(e -> "/event/" + e.getId()).toList(),
+                true
+        );
+        Map<String, Integer> statsMap = new HashMap<>();
+        stats.forEach(v -> statsMap.put(v.getUri(), v.getHits()));
+
+        statsClient.createHit(params.getRequest());
+        return eventShortDtos.stream()
+                .peek(e -> e.setViews(statsMap.get("/event/" + e.getId())))
+                .sorted(switch (params.getSort()) {
+                    case EVENT_DATE -> Comparator.comparing(EventShortDto::getEventDate).reversed();
+                    case VIEWS -> Comparator.comparing(EventShortDto::getViews).reversed();
+                    default -> Comparator.comparing(EventShortDto::getId);
+                })
                 .toList();
     }
 
     @Override
-    public EventFullDto getEvent_1(Long eventId, HttpServletRequest request) {
+    public EventFullDto getEventPublic(Long eventId, HttpServletRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id " + eventId + " не найдено"));
         if (!event.getState().equals(State.PUBLISHED)) {
@@ -291,15 +282,22 @@ public class EventServiceImpl implements EventService {
 
         statsClient.createHit(request);
 
-        List<ViewStatsDto> stats = statsClient.getStats("2020-01-01 01:00:00", "2040-01-01 01:00:00",
-                List.of(request.getRequestURI()), true);
+        List<ViewStatsDto> stats = statsClient.getStats(
+                // Увеличил интервал на -1 секунду к старту и +1 секунду к окончанию,
+                // потому что иначе в трети случаев тест падает
+                DateTimeMapper.mapToString(event.getPublishedOn().minusSeconds(1)),
+                DateTimeMapper.mapToString(ZonedDateTime.now(ZoneOffset.UTC).plusSeconds(1)),
+                List.of(request.getRequestURI()),
+                true
+        );
 
+        EventFullDto dto = EventMapper.mapToEventFullDto(event);
         if (stats != null && !stats.isEmpty()) {
-            event.setViews(stats.getFirst().getHits());
+            dto.setViews(stats.getFirst().getHits());
         } else {
-            event.setViews(0);
+            dto.setViews(0);
         }
-        return EventMapper.mapToEventFullDto(event);
+        return dto;
     }
 
     private void updateEventFields(Event event, UpdateEventRequest request) {

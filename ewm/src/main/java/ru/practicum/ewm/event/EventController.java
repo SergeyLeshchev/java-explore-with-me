@@ -18,7 +18,6 @@ public class EventController {
     private final EventService eventService;
 
     @GetMapping("/users/{userId}/events")
-    @ResponseStatus(HttpStatus.OK)
     public List<EventShortDto> getEvents(@PathVariable Long userId,
                                          @RequestParam(required = false, defaultValue = "0") Integer from,
                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
@@ -32,27 +31,23 @@ public class EventController {
     }
 
     @GetMapping("/users/{userId}/events/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEvent(@PathVariable Long userId, @PathVariable Long eventId) {
         return eventService.getEvent(userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
     public EventFullDto updateEvent(@PathVariable Long userId, @PathVariable Long eventId,
                                     @RequestBody @Valid UpdateEventRequest request) {
         return eventService.updateEvent(userId, eventId, request);
     }
 
     @GetMapping("/users/{userId}/events/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getEventParticipants(@PathVariable Long userId,
                                                               @PathVariable Long eventId) {
         return eventService.getEventParticipants(userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}/requests")
-    @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult changeRequestStatus(@PathVariable Long userId,
                                                               @PathVariable Long eventId,
                                                               @RequestBody @Valid EventRequestStatusUpdateRequest request) {
@@ -60,42 +55,40 @@ public class EventController {
     }
 
     @GetMapping("/admin/events")
-    @ResponseStatus(HttpStatus.OK)
-    public List<EventFullDto> getEvents_2(@RequestParam(required = false) List<Long> users,
-                                          @RequestParam(required = false) List<String> states,
-                                          @RequestParam(required = false) List<Long> categories,
-                                          @RequestParam(required = false) String rangeStart,
-                                          @RequestParam(required = false) String rangeEnd,
-                                          @RequestParam(required = false, defaultValue = "0") Integer from,
-                                          @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return eventService.getEvents_2(users, states, categories, rangeStart, rangeEnd, from, size);
+    public List<EventFullDto> getEventsAdmin(@RequestParam(required = false) List<Long> users,
+                                             @RequestParam(required = false) List<String> states,
+                                             @RequestParam(required = false) List<Long> categories,
+                                             @RequestParam(required = false) String rangeStart,
+                                             @RequestParam(required = false) String rangeEnd,
+                                             @RequestParam(required = false, defaultValue = "0") Integer from,
+                                             @RequestParam(required = false, defaultValue = "10") Integer size) {
+        ListParamsAdmin params = new ListParamsAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
+        return eventService.getEventsAdmin(params);
     }
 
     @PatchMapping("/admin/events/{eventId}")
-    @ResponseStatus(HttpStatus.OK)
-    public EventFullDto updateEvent_1(@PathVariable Long eventId, @RequestBody @Valid UpdateEventRequest request) {
-        return eventService.updateEvent_1(eventId, request);
+    public EventFullDto updateEventAdmin(@PathVariable Long eventId, @RequestBody @Valid UpdateEventRequest request) {
+        return eventService.updateEventAdmin(eventId, request);
     }
 
     @GetMapping("/events")
-    @ResponseStatus(HttpStatus.OK)
-    public List<EventShortDto> getEvents_1(@RequestParam(required = false) String text,
-                                           @RequestParam(required = false) List<Long> categories,
-                                           @RequestParam(required = false) Boolean paid,
-                                           @RequestParam(required = false) String rangeStart,
-                                           @RequestParam(required = false) String rangeEnd,
-                                           @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
-                                           @RequestParam(required = false) Sort sort,
-                                           @RequestParam(required = false, defaultValue = "0") Integer from,
-                                           @RequestParam(required = false, defaultValue = "10") Integer size,
-                                           HttpServletRequest request) {
-        return eventService.getEvents_1(text, categories, paid, rangeStart, rangeEnd,
-                onlyAvailable, sort, from, size, request);
+    public List<EventShortDto> getEventsPublic(@RequestParam(required = false) String text,
+                                               @RequestParam(required = false) List<Long> categories,
+                                               @RequestParam(required = false) Boolean paid,
+                                               @RequestParam(required = false) String rangeStart,
+                                               @RequestParam(required = false) String rangeEnd,
+                                               @RequestParam(required = false, defaultValue = "false") Boolean onlyAvailable,
+                                               @RequestParam(required = false) Sort sort,
+                                               @RequestParam(required = false, defaultValue = "0") Integer from,
+                                               @RequestParam(required = false, defaultValue = "10") Integer size,
+                                               HttpServletRequest request) {
+        ListParamsPublic params = new ListParamsPublic(text, categories, paid,
+                rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
+        return eventService.getEventsPublic(params);
     }
 
     @GetMapping("/events/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public EventFullDto getEvent_1(@PathVariable Long id, HttpServletRequest request) {
-        return eventService.getEvent_1(id, request);
+    public EventFullDto getEventPublic(@PathVariable Long id, HttpServletRequest request) {
+        return eventService.getEventPublic(id, request);
     }
 }

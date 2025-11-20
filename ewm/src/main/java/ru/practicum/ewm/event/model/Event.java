@@ -51,6 +51,4 @@ public class Event {
     private State state;
     @Column(nullable = false)
     private String title;
-    @Column(nullable = false)
-    private Integer views;
 }
