@@ -1,5 +1,5 @@
 FROM maven:3.9.6-eclipse-temurin-21
 WORKDIR /app
 COPY . .
-RUN mvn clean install -DskipTests
+RUN mvn clean install -DskipTests -pl stats/service -am
 CMD ["mvn", "spring-boot:run", "-pl", "stats/service", "-Dspring-boot.run.fork=false"]
