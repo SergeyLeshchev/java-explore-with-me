@@ -30,6 +30,8 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState().toString(),
                 event.getTitle(),
+                // Ставим null, чтобы можно было легко увидеть, что полям еще не присваивали значения
+                null,
                 null
         );
     }

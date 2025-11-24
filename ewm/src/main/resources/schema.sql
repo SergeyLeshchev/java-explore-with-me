@@ -57,3 +57,13 @@ CREATE TABLE IF NOT EXISTS compilation_events (
     FOREIGN KEY (compilation_id) REFERENCES compilations(id),
     FOREIGN KEY (event_id) REFERENCES events(id)
 );
+
+CREATE TABLE IF NOT EXISTS comments (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    text VARCHAR(5000) NOT NULL,
+    event_id BIGINT NOT NULL,
+    author_id BIGINT NOT NULL,
+    created_on TIMESTAMP WITH TIME ZONE NOT NULL,
+    FOREIGN KEY (author_id) REFERENCES users(id),
+    FOREIGN KEY (event_id) REFERENCES events(id)
+);

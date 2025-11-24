@@ -11,6 +11,9 @@ import ru.practicum.ewm.DateTimeMapper;
 import ru.practicum.ewm.StatsClient;
 import ru.practicum.ewm.ViewStatsDto;
 import ru.practicum.ewm.category.CategoryRepository;
+import ru.practicum.ewm.comment.CommentRepository;
+import ru.practicum.ewm.comment.mapper.CommentMapper;
+import ru.practicum.ewm.comment.model.Comment;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.State;
@@ -29,6 +32,7 @@ import ru.practicum.ewm.user.model.ParticipationRequest;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,6 +43,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final ParticipationRequestRepository participationRepository;
+    private final CommentRepository commentRepository;
     private final StatsClient statsClient;
 
     @Override
@@ -79,7 +84,9 @@ public class EventServiceImpl implements EventService {
         }
         event.setState(State.PENDING);
         event.setPublishedOn(ZonedDateTime.now(ZoneOffset.UTC));
-        return EventMapper.mapToEventFullDto(eventRepository.save(event));
+        EventFullDto dto = EventMapper.mapToEventFullDto(eventRepository.save(event));
+        dto.setComments(List.of());
+        return dto;
     }
 
     @Override
@@ -88,7 +95,10 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id " + eventId + " не найдено"));
-        return EventMapper.mapToEventFullDto(event);
+        EventFullDto dto = EventMapper.mapToEventFullDto(event);
+        List<Comment> comments = commentRepository.findAllByEventId(event.getId());
+        dto.setComments(comments.stream().map(CommentMapper::mapToCommentResponseDto).toList());
+        return dto;
     }
 
     @Override
@@ -119,7 +129,10 @@ public class EventServiceImpl implements EventService {
                 throw new BadRequestException("Событие можно только отправить на модерацию или отменить");
             }
         }
-        return EventMapper.mapToEventFullDto(eventRepository.save(event));
+        EventFullDto dto = EventMapper.mapToEventFullDto(eventRepository.save(event));
+        List<Comment> comments = commentRepository.findAllByEventId(event.getId());
+        dto.setComments(comments.stream().map(CommentMapper::mapToCommentResponseDto).toList());
+        return dto;
     }
 
     @Override
@@ -190,9 +203,31 @@ public class EventServiceImpl implements EventService {
                 params.getRangeEnd(),
                 pageable
         );
-        return events.stream()
-                .map(EventMapper::mapToEventFullDto)
+        List<Long> ids = events.stream()
+                .map(Event::getId)
                 .toList();
+        // Получаем из репозитория комментарии для всех событий одним запросом
+        Map<Long, List<Comment>> commentsForEachEvent = commentRepository.findAllByEventIdIn(ids).stream()
+                .collect(Collectors.groupingBy(comment -> comment.getEvent().getId()));
+
+        List<EventFullDto> dtos = events.stream()
+                // Преобразуем события в дто
+                .map(EventMapper::mapToEventFullDto)
+                .peek(e -> {
+                    List<Comment> comments = commentsForEachEvent.get(e.getId());
+                    // Если у этого события есть комментарии
+                    if (comments != null) {
+                        // Каждому событию присваиваем список комментариев из мапы
+                        e.setComments(comments.stream()
+                                // Каждый комментарий в списке преобразуем в дто
+                                .map(CommentMapper::mapToCommentResponseDto)
+                                .toList());
+                    } else {
+                        e.setComments(List.of());
+                    }
+                })
+                .toList();
+        return dtos;
     }
 
     @Override
@@ -221,7 +256,10 @@ public class EventServiceImpl implements EventService {
                 throw new BadRequestException("Событие можно только опубликовать или отменить");
             }
         }
-        return EventMapper.mapToEventFullDto(eventRepository.save(event));
+        EventFullDto dto = EventMapper.mapToEventFullDto(eventRepository.save(event));
+        List<Comment> comments = commentRepository.findAllByEventId(event.getId());
+        dto.setComments(comments.stream().map(CommentMapper::mapToCommentResponseDto).toList());
+        return dto;
     }
 
     @Override
@@ -248,12 +286,18 @@ public class EventServiceImpl implements EventService {
                 params.getOnlyAvailable(),
                 pageable
         );
-
+        if (events == null || events.isEmpty()) {
+            return List.of();
+        }
+        ZonedDateTime startStats = events.stream()
+                .map(Event::getPublishedOn)
+                .min(Comparator.naturalOrder())
+                .get();
         List<EventShortDto> eventShortDtos = events.stream()
                 .map(EventMapper::mapToEventShortDto)
                 .toList();
         List<ViewStatsDto> stats = statsClient.getStats(
-                DateTimeMapper.mapToString(ZonedDateTime.now(ZoneOffset.UTC).minusYears(5)),
+                DateTimeMapper.mapToString(startStats),
                 DateTimeMapper.mapToString(ZonedDateTime.now(ZoneOffset.UTC)),
                 eventShortDtos.stream().map(e -> "/event/" + e.getId()).toList(),
                 true
@@ -306,6 +350,8 @@ public class EventServiceImpl implements EventService {
         } else {
             dto.setViews(0);
         }
+        List<Comment> comments = commentRepository.findAllByEventId(event.getId());
+        dto.setComments(comments.stream().map(CommentMapper::mapToCommentResponseDto).toList());
         return dto;
     }
 
