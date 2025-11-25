@@ -28,11 +28,11 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public CommentResponseDto addComment(Long userId, Long eventId, CommentRequestDto newComment) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден."));
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с id " + eventId + " не найдено."));
+    public CommentResponseDto addComment(CommentRequestDto newComment) {
+        User user = userRepository.findById(newComment.getUserId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + newComment.getUserId() + " не найден."));
+        Event event = eventRepository.findById(newComment.getEventId())
+                .orElseThrow(() -> new NotFoundException("Событие с id " + newComment.getEventId() + " не найдено."));
         if (!Objects.equals(event.getState(), State.PUBLISHED)) {
             throw new ConflictException("Событие должно быть опубликовано");
         }
@@ -43,14 +43,15 @@ public class CommentServiceImpl implements CommentService {
                 user,
                 ZonedDateTime.now(ZoneOffset.UTC)
         );
+        eventRepository.incrementComments(comment.getEvent().getId());
         return CommentMapper.mapToCommentResponseDto(commentRepository.save(comment));
     }
 
-    public CommentResponseDto updateComment(Long userId, Long commentId, CommentUpdateRequest newComment) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден."));
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException("Комментарий с id " + commentId + " не найден."));
+    public CommentResponseDto updateComment(CommentUpdateRequest newComment) {
+        User user = userRepository.findById(newComment.getUserId())
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + newComment.getUserId() + " не найден."));
+        Comment comment = commentRepository.findById(newComment.getCommentId())
+                .orElseThrow(() -> new NotFoundException("Комментарий с id " + newComment.getCommentId() + " не найден."));
         if (!Objects.equals(user.getId(), comment.getAuthor().getId())) {
             throw new DataAccessException("Только автор комментария может менять комментарий");
         }
@@ -70,6 +71,14 @@ public class CommentServiceImpl implements CommentService {
                 .toList();
     }
 
+    public List<CommentResponseDto> getCommentsByEventId(Long eventId) {
+        eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Событие с id " + eventId + " не найдено."));
+        return commentRepository.findAllByEventId(eventId).stream()
+                .map(CommentMapper::mapToCommentResponseDto)
+                .toList();
+    }
+
     public void deleteCommentUser(Long userId, Long commentId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден."));
@@ -82,8 +91,9 @@ public class CommentServiceImpl implements CommentService {
     }
 
     public void deleteCommentAdmin(Long commentId) {
-        commentRepository.findById(commentId)
+        Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Комментарий с id " + commentId + " не найден."));
+        eventRepository.decrementComments(comment.getEvent().getId());
         commentRepository.deleteById(commentId);
     }
 }

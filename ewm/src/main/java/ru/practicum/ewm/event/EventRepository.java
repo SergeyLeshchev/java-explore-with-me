@@ -32,6 +32,16 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("UPDATE Event e SET e.confirmedRequests = e.confirmedRequests + 1 WHERE e.id = :eventId")
     void incrementConfirmedRequests(@Param("eventId") Long eventId);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE Event e SET e.comments = e.comments - 1 WHERE e.id = :eventId")
+    void decrementComments(@Param("eventId") Long eventId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Event e SET e.comments = e.comments + 1 WHERE e.id = :eventId")
+    void incrementComments(@Param("eventId") Long eventId);
+
     List<Event> findByInitiatorIdOrderById(Long userId, Pageable pageable);
 
     @Query("SELECT e FROM Event e " +

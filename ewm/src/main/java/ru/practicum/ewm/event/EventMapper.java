@@ -30,8 +30,7 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState().toString(),
                 event.getTitle(),
-                // Ставим null, чтобы можно было легко увидеть, что полям еще не присваивали значения
-                null,
+                event.getComments(),
                 null
         );
     }
@@ -46,6 +45,7 @@ public class EventMapper {
                 UserMapper.mapToUserShortDto(event.getInitiator()),
                 event.getPaid(),
                 event.getTitle(),
+                event.getComments(),
                 null
         );
     }
@@ -66,7 +66,8 @@ public class EventMapper {
                 null,
                 dto.getRequestModeration(),
                 null,
-                dto.getTitle()
+                dto.getTitle(),
+                0
         );
     }
 }

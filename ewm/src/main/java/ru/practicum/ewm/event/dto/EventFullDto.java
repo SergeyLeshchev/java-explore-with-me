@@ -4,11 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewm.category.dto.CategoryDto;
-import ru.practicum.ewm.comment.dto.CommentResponseDto;
 import ru.practicum.ewm.location.LocationDto;
 import ru.practicum.ewm.user.dto.UserShortDto;
-
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,6 +26,6 @@ public class EventFullDto {
     private Boolean requestModeration;
     private String state;
     private String title;
-    private List<CommentResponseDto> comments;
+    private Integer comments;
     private Integer views;
 }

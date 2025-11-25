@@ -16,19 +16,15 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
-    @PostMapping("/users/{userId}/comments/{eventId}")
+    @PostMapping("/users/comments")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentResponseDto addComment(@PathVariable Long userId,
-                                         @PathVariable Long eventId,
-                                         @RequestBody @Valid CommentRequestDto newComment) {
-        return commentService.addComment(userId, eventId, newComment);
+    public CommentResponseDto addComment(@RequestBody @Valid CommentRequestDto newComment) {
+        return commentService.addComment(newComment);
     }
 
-    @PatchMapping("/users/{userId}/comments/{commentId}")
-    public CommentResponseDto updateComment(@PathVariable Long userId,
-                                            @PathVariable Long commentId,
-                                            @RequestBody @Valid CommentUpdateRequest newComment) {
-        return commentService.updateComment(userId, commentId, newComment);
+    @PatchMapping("/users/comments")
+    public CommentResponseDto updateComment(@RequestBody @Valid CommentUpdateRequest newComment) {
+        return commentService.updateComment(newComment);
     }
 
     @GetMapping("/comments/{commentId}")
@@ -39,6 +35,11 @@ public class CommentController {
     @GetMapping("/comments")
     public List<CommentResponseDto> getComments() {
         return commentService.getComments();
+    }
+
+    @GetMapping("/comments/events/{eventId}")
+    public List<CommentResponseDto> getCommentsByEventId(@PathVariable Long eventId) {
+        return commentService.getCommentsByEventId(eventId);
     }
 
     @DeleteMapping("/users/{userId}/comments/{commentId}")
