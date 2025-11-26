@@ -43,7 +43,6 @@ public class CommentServiceImpl implements CommentService {
                 user,
                 ZonedDateTime.now(ZoneOffset.UTC)
         );
-        eventRepository.incrementComments(comment.getEvent().getId());
         return CommentMapper.mapToCommentResponseDto(commentRepository.save(comment));
     }
 
@@ -91,9 +90,8 @@ public class CommentServiceImpl implements CommentService {
     }
 
     public void deleteCommentAdmin(Long commentId) {
-        Comment comment = commentRepository.findById(commentId)
+        commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Комментарий с id " + commentId + " не найден."));
-        eventRepository.decrementComments(comment.getEvent().getId());
         commentRepository.deleteById(commentId);
     }
 }

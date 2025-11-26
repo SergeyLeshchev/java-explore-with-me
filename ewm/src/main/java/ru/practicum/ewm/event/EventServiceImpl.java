@@ -11,6 +11,8 @@ import ru.practicum.ewm.DateTimeMapper;
 import ru.practicum.ewm.StatsClient;
 import ru.practicum.ewm.ViewStatsDto;
 import ru.practicum.ewm.category.CategoryRepository;
+import ru.practicum.ewm.comment.CommentRepository;
+import ru.practicum.ewm.comment.model.CommentCountProjection;
 import ru.practicum.ewm.event.dto.*;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.State;
@@ -29,6 +31,7 @@ import ru.practicum.ewm.user.model.ParticipationRequest;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,6 +42,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final ParticipationRequestRepository participationRepository;
+    private final CommentRepository commentRepository;
     private final StatsClient statsClient;
 
     @Override
@@ -269,8 +273,21 @@ public class EventServiceImpl implements EventService {
 
         eventShortDtos.forEach(e -> e.setViews(statsMap.get("/event/" + e.getId())));
         statsClient.createHit(params.getRequest());
+
+        List<CommentCountProjection> commentCounts = commentRepository.getCommentCountsByEventIds(
+                eventShortDtos.stream()
+                        .map(EventShortDto::getId)
+                        .toList()
+        );
+        Map<Long, Integer> commentCountsMap = commentCounts.stream()
+                .collect(Collectors.toMap(
+                        CommentCountProjection::getEventId,
+                        CommentCountProjection::getCommentCount
+                ));
+
         // Такой синтаксис сортировки, потому что Checkstyle не пропускает оператор switch рядом со скобкой
         return eventShortDtos.stream()
+                .peek(e -> e.setComments(commentCountsMap.get(e.getId())))
                 .sorted((e1, e2) -> {
                     switch (params.getSort()) {
                         case EVENT_DATE -> {
@@ -312,6 +329,7 @@ public class EventServiceImpl implements EventService {
         } else {
             dto.setViews(0);
         }
+        dto.setComments(commentRepository.countByEventId(eventId));
         return dto;
     }
 

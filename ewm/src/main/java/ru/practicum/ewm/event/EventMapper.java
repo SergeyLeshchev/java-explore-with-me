@@ -30,7 +30,7 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState().toString(),
                 event.getTitle(),
-                event.getComments(),
+                null,
                 null
         );
     }
@@ -45,7 +45,7 @@ public class EventMapper {
                 UserMapper.mapToUserShortDto(event.getInitiator()),
                 event.getPaid(),
                 event.getTitle(),
-                event.getComments(),
+                null,
                 null
         );
     }
@@ -66,8 +66,7 @@ public class EventMapper {
                 null,
                 dto.getRequestModeration(),
                 null,
-                dto.getTitle(),
-                0
+                dto.getTitle()
         );
     }
 }
