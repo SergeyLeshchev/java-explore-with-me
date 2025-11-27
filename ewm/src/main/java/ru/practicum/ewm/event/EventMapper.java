@@ -30,6 +30,7 @@ public class EventMapper {
                 event.getRequestModeration(),
                 event.getState().toString(),
                 event.getTitle(),
+                null,
                 null
         );
     }
@@ -44,6 +45,7 @@ public class EventMapper {
                 UserMapper.mapToUserShortDto(event.getInitiator()),
                 event.getPaid(),
                 event.getTitle(),
+                null,
                 null
         );
     }
